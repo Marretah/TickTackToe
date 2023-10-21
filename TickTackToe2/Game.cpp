@@ -143,7 +143,7 @@ void playVSPlayer(GameMap* gm)
 
 		if (isPlayerWon(gm))
 		{
-			break;
+			return;
 		}
 
 	} while (true);
