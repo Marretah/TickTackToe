@@ -39,13 +39,13 @@ void renderGameMap(GameMap* gm)
 	}
 	std::cout << "\n";
 }
-int randomNumberGenerator(std::vector<int> possibleMovesList,int min,int max)
+int randomNumberGenerator(std::vector<int> possibleMovesList, int min, int max)
 {
 	std::random_device rd; // obtain a random number from hardware
 	std::mt19937 gen(rd()); // seed the generator
 	std::uniform_int_distribution<> distr(min, max); // define the range
 	return distr(gen);
-	
+
 }
 std::string swapPlayers(std::string  currentPlayer, GameMap* gm)
 {
@@ -82,16 +82,54 @@ bool isPlayerWon(GameMap* gm)
 	}
 	return false;
 }
+int heuristicFunction(int move, GameMap gm,std::string player)
+{
+	makeMove(move, &gm, player);
+	if (isWinCondition(&gm))
+	{
+		return 1;
+	}
+	return 0;
+}
+
+int minimax(int node, int depth, bool maximizingPlayer, GameMap gm)
+{
+	std::vector<int> possibleMoves = returnPossibleMove(&gm);
+	if (depth == 0 || possibleMoves.size() <= 1)
+	{
+		//return possibleMoves[0]; // heuristic fuction goes here
+		return heuristicFunction(node, gm,gm.CurrentPlayer);
+	}
+	if (maximizingPlayer)
+	{
+		int value = INT_MIN;
+		for (int i : possibleMoves)
+		{
+			value = max(value, minimax(i, depth - 1, false, gm));
+			return value;
+		}
+	}
+
+	int value = INT_MAX;
+	for (int i : possibleMoves)
+	{
+		value = min(value, minimax(i, depth - 1, true, gm));
+		return value;
+	}
+
+	return -1;
+
+}
 void playVSPlayer(GameMap* gm)
 {
 	gm->CurrentPlayer = gm->Player2;
 	std::string s;
 	bool ReadyForNextPlayer;
-	
+
 	do
 	{
 		gm->CurrentPlayer = swapPlayers(gm->CurrentPlayer, gm);
-		
+
 		do
 		{
 			system("CLS");
@@ -101,21 +139,21 @@ void playVSPlayer(GameMap* gm)
 			std::cin >> s;
 			ReadyForNextPlayer = makeMove(std::stoi(s), gm, gm->CurrentPlayer);
 
-		} while (!ReadyForNextPlayer); 
-		
+		} while (!ReadyForNextPlayer);
+
 		if (isPlayerWon(gm))
 		{
 			break;
-		}	
+		}
 
 	} while (true);
 }
-void playVSEasyBot(GameMap * gm)
+void playVSEasyBot(GameMap* gm)
 {
 	gm->CurrentPlayer = gm->Player2;
 	std::string s;
 	bool ReadyForNextPlayer;
-	
+
 	do
 	{
 		gm->CurrentPlayer = swapPlayers(gm->CurrentPlayer, gm);
@@ -129,10 +167,9 @@ void playVSEasyBot(GameMap * gm)
 			ReadyForNextPlayer = makeMove(std::stoi(s), gm, gm->CurrentPlayer);
 
 		} while (!ReadyForNextPlayer);
-		if (isWinCondition(gm) && gm->CurrentPlayer.compare(gm->Player1) == 0)
+
+		if (isPlayerWon(gm))
 		{
-			std::cout << "Player " << dye::green(gm->Player1) << " won!!!";
-			renderGameMap(gm);
 			break;
 		}
 
@@ -143,6 +180,52 @@ void playVSEasyBot(GameMap * gm)
 			std::vector<int> nextMoveList = returnPossibleMove(gm);
 			makeMove(nextMoveList[indexOfNextMove], gm, gm->CurrentPlayer);
 		}
+
+		if (isPlayerWon(gm))
+		{
+			break;
+		}
+
+	} while (true);
+}
+void playVSHardBot(GameMap* gm)
+{
+	gm->CurrentPlayer = gm->Player2;
+	std::string s;
+	bool ReadyForNextPlayer;
+
+	do
+	{
+		gm->CurrentPlayer = swapPlayers(gm->CurrentPlayer, gm);
+		do
+		{ // Begining player movement
+			system("CLS");
+			std::cout << "\n\tPlayer " << gm->CurrentPlayer << " to move";
+			renderGameMap(gm);
+			std::cout << "\n\tSelect a position to move\n";
+			std::cin >> s;
+			ReadyForNextPlayer = makeMove(std::stoi(s), gm, gm->CurrentPlayer);
+
+		} while (!ReadyForNextPlayer); // Ending player movement
+
+		if (isPlayerWon(gm))
+		{
+			break;
+		}
+
+		if (gm->maxPossibleMoves > 0) // Begining CPU movement
+		{
+			gm->CurrentPlayer = swapPlayers(gm->CurrentPlayer, gm);
+			//int indexOfNextMove = minimax(std::stoi(s), 9, false, *gm);
+			std::vector<int> nextMoveList = returnPossibleMove(gm);
+			int indexOfNextMove = -1;
+			for (int i : nextMoveList)
+			{
+				int aux = minimax(i, gm->maxPossibleMoves, true, *gm);
+				indexOfNextMove = max(aux, indexOfNextMove);
+			}
+			makeMove(nextMoveList[indexOfNextMove], gm, gm->CurrentPlayer);
+		} // Ending CPU movement
 
 		if (isPlayerWon(gm))
 		{

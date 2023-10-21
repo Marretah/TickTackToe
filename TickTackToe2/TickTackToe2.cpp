@@ -5,6 +5,6 @@
 int main()
 {
     GameMap gm;
-    playVSEasyBot(&gm);
+    playVSHardBot(&gm);
     system("pause");
 }
