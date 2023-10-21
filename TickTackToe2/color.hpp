@@ -1,6 +1,8 @@
 #ifndef COLOR_HPP
 #define COLOR_HPP
-
+// This portion of code was taken from:
+// https://github.com/hugorplobo/colors.hpp
+// All the credit should go to the original creator
 #include <algorithm>
 #include <iostream>
 #include <list>
